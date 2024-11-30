@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/emcassi/open-stash-api/app"
+	"github.com/emcassi/open-stash-api/controllers"
 	"github.com/emcassi/open-stash-api/helpers"
 	"github.com/emcassi/open-stash-api/models"
 	"github.com/go-chi/chi/v5"
@@ -51,5 +52,26 @@ func createUserEmailPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.WriteJSON(w, http.StatusCreated, map[string]interface{}{ "message": fmt.Sprintf("Created User with Email: %s", body.Email) })	
+	if body.Name == "" {
+		helpers.WriteError(w, *app.NewError(http.StatusBadRequest, errors.New("field 'name' is required")))
+		return
+	}
+
+	if body.Email == "" {
+		helpers.WriteError(w, *app.NewError(http.StatusBadRequest, errors.New("field 'email' is required")))
+		return
+	}
+
+	if body.Password == "" {
+		helpers.WriteError(w, *app.NewError(http.StatusBadRequest, errors.New("field 'password' is required")))
+		return
+	}
+
+	user, appErr := controllers.CreateUserWithEmailAndPassword(body)
+	if appErr != nil {
+		helpers.WriteError(w, *appErr)
+		return 
+	}
+
+	helpers.WriteJSON(w, http.StatusCreated, map[string]interface{}{ "message": fmt.Sprintf("Created User with Email: %s", *user.Email) })	
 }

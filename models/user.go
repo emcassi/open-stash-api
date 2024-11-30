@@ -1,14 +1,10 @@
 package models
 
-import "time"
-
 type User struct {
-	Id string
+	Base
 	Name string
-	Email string
-	Password string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Email *string
+	Password *string
 }
 
 type UserCreationEmailPw struct {

@@ -16,15 +16,21 @@ import (
 func main() {
 	r := chi.NewRouter()
 
-  r.Use(middleware.RequestID)
-  r.Use(middleware.RealIP)
-  r.Use(middleware.Logger)
-  r.Use(middleware.Recoverer)
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
 	envFile := "dev.env"
 	err := godotenv.Load(envFile)
 	if err != nil {
 		log.Printf(".env file not found: %s\n", envFile)
+	}
+
+	err = app.InitDb()
+	if err != nil {
+		log.Fatal(err.Error())
+		return
 	}
 
 	port := os.Getenv("PORT")
@@ -33,7 +39,7 @@ func main() {
 	}
 
 	routers.HandleRoutes(r)
-	
+
 	log.Printf("Listening at: http://127.0.0.1:%s\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
