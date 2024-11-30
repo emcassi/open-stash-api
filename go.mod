@@ -5,6 +5,7 @@ go 1.23.3
 require (
 	github.com/AfterShip/email-verifier v1.4.1 // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hbollon/go-edlib v1.6.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect

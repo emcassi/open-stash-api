@@ -2,7 +2,6 @@ package repos
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/emcassi/open-stash-api/app"
@@ -11,7 +10,6 @@ import (
 )
 
 func CreateUserWithEmailAndPassword(body models.UserCreationEmailPw) (*models.User, *app.AppError) {
-	log.Printf("BODY NAME: %s, EMAIL: %s, PASSWORD: %s\n", body.Name, body.Email, body.Password)
 	user := models.User{Name: body.Name, Email: &body.Email, Password: &body.Password}
 	result := app.Db.Create(&user)
 	if result.Error != nil {
@@ -20,6 +18,16 @@ func CreateUserWithEmailAndPassword(body models.UserCreationEmailPw) (*models.Us
 		} else {
 			return nil, app.NewError(http.StatusInternalServerError, result.Error)
 		}
+	}
+
+	return &user, nil
+}
+
+func GetUserByEmail(email string) (*models.User, *app.AppError) {
+	var user models.User
+	result := app.Db.Where("email = ?", email).First(&user)	
+	if result.Error != nil {
+		return nil, app.NewError(http.StatusBadRequest, result.Error)
 	}
 
 	return &user, nil
