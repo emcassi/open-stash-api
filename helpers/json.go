@@ -21,7 +21,7 @@ func WriteJSON(w http.ResponseWriter, status int, data map[string]interface{}) {
 
 func WriteError(w http.ResponseWriter, appError app.AppError) {
 	data := map[string]interface{}{
-		"message": appError.Message,
+		"error": appError.Error.Error(),
 	}
 
 	json, err := json.Marshal(data)
