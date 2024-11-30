@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/emcassi/open-stash-api/routers"
-	"github.com/emcassi/open-stash-api/setup"
+	"github.com/emcassi/open-stash-api/app"
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 )
@@ -23,7 +23,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = setup.DefaultPort
+		port = app.DefaultPort
 	}
 
 	routers.HandleRoutes(r)
