@@ -14,40 +14,45 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUserWithEmailAndPassword(body models.UserCreationEmailPw) (*models.User, *app.AppError) {
+func CreateUserWithEmailAndPassword(body models.UserCreationEmailPw) (string, *app.AppError) {
 	// Field Validation
 	appErr := validation.ValidateUserName(body.Name)
 	if appErr != nil {
-		return nil, appErr
+		return "", appErr
 	}
 
 	appErr = validation.ValidateUserEmail(body.Email)
 	if appErr != nil {
-		return nil, appErr
+		return "", appErr
 	}
 
 	appErr = validation.ValidateUserPassword(body.Password)
 	if appErr != nil {
-		return nil, appErr
+		return "", appErr
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, app.NewError(http.StatusInternalServerError, err)
+		return "", app.NewError(http.StatusInternalServerError, err)
 	}
 
 	body.Password = string(hash)
 
 	user, appErr := repos.CreateUserWithEmailAndPassword(body)
 	if appErr != nil {
-		return nil, appErr
+		return "", appErr
 	}
 
-	return user, nil
+	tokenString, appErr := CreateJWT(user.ID)
+	if appErr != nil {
+		return "", appErr
+	}
+
+	return tokenString, nil
 }
 
 func LoginWithEmailAndPassword(body models.UserLoginEmailPw) (string, *app.AppError) {
-	user, appErr := repos.GetUserByEmail(body.Email)	
+	user, appErr := repos.GetUserByEmail(body.Email)
 	if appErr != nil {
 		return "", appErr
 	}
@@ -57,6 +62,15 @@ func LoginWithEmailAndPassword(body models.UserLoginEmailPw) (string, *app.AppEr
 		return "", app.NewError(http.StatusBadRequest, errors.New("password is incorrect"))
 	}
 
+	tokenString, appErr := CreateJWT(user.ID)
+	if appErr != nil {
+		return "", appErr
+	}
+
+	return tokenString, nil
+}
+
+func CreateJWT(userId string) (string, *app.AppError) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		return "", app.NewError(http.StatusInternalServerError, errors.New("environment variable 'JWT_SECRET' not found"))
@@ -64,7 +78,7 @@ func LoginWithEmailAndPassword(body models.UserLoginEmailPw) (string, *app.AppEr
 
 	expiration := time.Now().Add(time.Hour * 24 * 30)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId": user.ID,
+		"userId":    userId,
 		"expiresAt": expiration,
 	})
 

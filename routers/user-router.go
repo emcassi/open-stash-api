@@ -3,7 +3,6 @@ package routers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/emcassi/open-stash-api/app"
@@ -16,6 +15,15 @@ import (
 func HandleUserRoutes(r *chi.Mux) {
 	r.Post("/users", createUser)
 	r.Post("/auth/login", login)
+
+	r.Route("/users/protected", func(r chi.Router) {
+		r.Use(AuthMiddleware)
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			helpers.WriteJSON(w, http.StatusOK, map[string]interface{}{
+				"message": "Authorized",
+			})
+		})
+	})
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
@@ -68,13 +76,13 @@ func createUserEmailPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, appErr := controllers.CreateUserWithEmailAndPassword(body)
+	token, appErr := controllers.CreateUserWithEmailAndPassword(body)
 	if appErr != nil {
 		helpers.WriteError(w, *appErr)
 		return
 	}
 
-	helpers.WriteJSON(w, http.StatusCreated, map[string]interface{}{"message": fmt.Sprintf("Created User with Email: %s", *user.Email)})
+	helpers.WriteJSON(w, http.StatusCreated, map[string]interface{}{"token": token})
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +100,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginWithEmailAndPassword(w http.ResponseWriter, r *http.Request) {
-	var body models.UserLoginEmailPw	
+	var body models.UserLoginEmailPw
 
 	bodyEmpty, err := IsRequestBodyEmpty(r)
 	if err != nil {
